@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 
-import {Box, Button, TextField} from "@mui/material";
+import {Box, Button, TextField, Menu, MenuItem} from "@mui/material";
 import {TreeView, TreeItem, TreeItemProps} from "@mui/lab";
 import styled from "@emotion/styled";
 
@@ -54,25 +54,37 @@ export default (props: LeftMenuProps) => {
                 const subDatas = allTreeData.filter(sub => sub.parentId);
 
                 if(d.childrenIds.length === 0) {
-                    result.push(<TreeItem key={d.id} nodeId={d.id} label={d.name}/>);
+                    result.push(
+                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}>
+                            <TreeItem nodeId={d.id} label={d.name}/>
+                        </div>
+                    );
                 } else {
                     result.push(
-                        <TreeItem key={d.id} nodeId={d.id} label={d.name}>
-                            {addTreeNode(subDatas, id)}
-                        </TreeItem>
+                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}>
+                            <TreeItem nodeId={d.id} label={d.name}>
+                                {addTreeNode(subDatas, id)}
+                            </TreeItem>
+                        </div>
                     )
                 }
             } else if(parentId && (d.parentId === parentId)) {
                 const subDatas = allTreeData.filter(sub => d.id !== sub.id);
 
                 if(d.childrenIds.length === 0) {
-                    result.push(<TreeItem key={d.id} nodeId={d.id} label={d.name}/>);
+                    result.push(
+                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}>
+                            <TreeItem nodeId={d.id} label={d.name}/>
+                        </div>
+                    );
                 } else {
                     // if node has children, call recursively
                     result.push(
-                        <TreeItem key={d.id} nodeId={d.id} label={d.name}>
-                            { addTreeNode(subDatas, id)}
-                        </TreeItem>
+                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}>
+                            <TreeItem nodeId={d.id} label={d.name}>
+                                { addTreeNode(subDatas, id)}
+                            </TreeItem>
+                        </div>
                     )
                 }
             }
@@ -87,6 +99,36 @@ export default (props: LeftMenuProps) => {
 
         return addTreeNode(treeData);
     }
+
+    const [contextMenu, setContextMenu] = React.useState<{
+        mouseX: number;
+        mouseY: number;
+    } | null>(null);
+
+    const handleContextMenu = (event: React.MouseEvent) => {
+        event.preventDefault();
+
+        setSelectedNode(event.currentTarget.id);
+
+        setContextMenu(
+            contextMenu === null
+                ? {
+                    mouseX: event.clientX + 2,
+                    mouseY: event.clientY - 6,
+                }
+                : // repeated contextmenu when it is already open closes it with Chrome 84 on Ubuntu
+                  // Other native context menus might behave different.
+                  // With this behavior we prevent contextmenu from the backdrop to re-locale existing context menus.
+                null,
+        );
+    };
+
+
+
+    const handleClose = () => {
+        setContextMenu(null);
+    };
+
 
     /*
     *
@@ -109,23 +151,30 @@ export default (props: LeftMenuProps) => {
     const tree2: TreeData = new TreeData("3", "tree22", "1");
 
     const trees = [root, tree1, tree2, tree2Child4, tree1Child3, tree1Child1, tree1Child2 , root2, root3,root4]
+
+    const root11: TreeData = new TreeData("16759768090991", "root");
+    const root2222: TreeData = new TreeData("1675976814600", "root2", "16759768090991");
+
+    const tempTree = [root11, root2222]
     // ====================================================================================================
 
     const [isAddboxShown, setAddbox] = useRecoilState(addBox);
-    const [tree, setTree] = useRecoilState(treeData);
 
+    // const [tree, setTree] = useRecoilState(treeData);
+    const [tree, setTree] = useState<Array<TreeData>>([]);
     const [addText, setAddText] = useState<string>("");
-    // setTree(trees);
+    const [selectedNode, setSelectedNode] = useState("");
 
     const treeItems = getHierarchicalTree(tree);
-
-
 
 
     return (
         <Box>
             <Box>
-                <ButtonBox onClick={() => setAddbox(true)}>
+                <ButtonBox onClick={() => {
+                    setSelectedNode("");
+                    setAddbox(true)
+                }}>
                     <FontAwesomeIcon icon={faPlus} />
 
                 </ButtonBox>
@@ -134,9 +183,12 @@ export default (props: LeftMenuProps) => {
             {/* Add view */}
             <Box style={{display: isAddboxShown? "block" : "none", height: "100%"}}>
                 <TextField size={"small"} variant={"standard"} onChange={(e) => setAddText(e.target.value)} />
-                aaa {addText}
+                {addText}
+
                 <Button onClick={() => {
-                    setTree(old => getTreeData(old, addText))
+
+                    setTree(old => getTreeData(old, addText, selectedNode));
+                    setAddbox(false);
                 }}> OK </Button>
             </Box>
 
@@ -152,6 +204,23 @@ export default (props: LeftMenuProps) => {
                 </TreeView>
             </Box>
 
+            {/* Context menu for right click*/}
+            <Menu
+                open={contextMenu !== null}
+                onClose={handleClose}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    contextMenu !== null
+                        ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+                        : undefined
+                }
+            >
+                <MenuItem onClick={() => {
+                    setAddbox(true);
+                    handleClose();
+                }}>Add</MenuItem>
+
+            </Menu>
 
         </Box>
     )
@@ -159,7 +228,6 @@ export default (props: LeftMenuProps) => {
 }
 
 const getTreeData = (target: Array<TreeData>, name: string, parentId: string = "") => {
-    console.log("target : " + target + ",   length : " + target.length);
     const id: string = Date.now() + "";
     const treeNode: TreeData = new TreeData(id, name, parentId);
 

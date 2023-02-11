@@ -58,7 +58,12 @@ class TreeData {
         return this._childrenIds;
     }
 
+    set childrenIds(value: Array<string>) {
+        this._childrenIds = value;
+    }
+
     public addChildren(children: string | Array<string>) {
+
         if(Array.isArray(children)) {
             this.childrenIds.push(...children);
         } else {
