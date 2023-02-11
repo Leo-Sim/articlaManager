@@ -107,6 +107,7 @@ export default (props: LeftMenuProps) => {
 
     const handleContextMenu = (event: React.MouseEvent) => {
         event.preventDefault();
+        event.stopPropagation();
 
         setSelectedNode(event.currentTarget.id);
 
