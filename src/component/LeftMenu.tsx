@@ -1,17 +1,20 @@
 import React, {useState} from "react";
 
-import {Box, Button, TextField, Menu, MenuItem} from "@mui/material";
+import {Box, Divider, Menu, MenuItem, Snackbar, Alert, AlertColor} from "@mui/material";
 import {TreeView, TreeItem, TreeItemProps} from "@mui/lab";
 import styled from "@emotion/styled";
 
-import {faPlus, faCaretRight, faCaretDown} from "@fortawesome/free-solid-svg-icons";
+import {faPlus, faCaretRight, faCaretDown, faCheck, faXmark} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {ButtonBox} from "./common/CommonBox";
+import {ButtonBox} from "./common/commonBox";
+import {TextSmall} from "./common/commonInput";
 
 import {TreeData} from "./treeData";
 import {useRecoilState} from "recoil";
 
 import {addBox, treeData} from "../state/menuState";
+
+import {toast, toastSeverity, toastMessage} from "../state/commonState";
 
 interface LeftMenuProps {
 }
@@ -124,50 +127,52 @@ export default (props: LeftMenuProps) => {
         );
     };
 
+    const [toastOpen, setToastOpen] = useRecoilState(toast);
+    const [toastMsg, setToastMsg] = useRecoilState(toastMessage);
+    const [toastSevere, setToastSevere] = useRecoilState(toastSeverity);
+
+    const showToast = (message: string, severity: AlertColor) => {
+        setToastSevere(severity);
+        setToastMsg(message);
+        setToastOpen(true);
+    }
+
+    const closeToast = () => {
+        setToastOpen(false)
+    }
+
+    const addNodeToTree = () => {
+        if(!addText) {
+            showToast("Enter name of node", "error");
+            return;
+        }
+
+        setTree(old => getTreeData(old, addText, selectedNode));
+        setAddbox(false);
+        showToast( "\"" + addText + "\" is added to tree", "success");
+    }
+
+    const removeNode = () => {
+
+    }
+
+    const closeAdd = () => {
+        setAddbox(false);
+    }
+
 
 
     const handleClose = () => {
         setContextMenu(null);
     };
 
-
-    /*
-    *
-    * sample tree data
-    *
-    * */
-
-    const root: TreeData = new TreeData("1", "root");
-    const root2: TreeData = new TreeData("100", "root2");
-    const root4: TreeData = new TreeData("103", "root3");
-    const root3: TreeData = new TreeData("101", "root2 child", "100");
-    const tree1: TreeData = new TreeData("2", "tree1", "1");
-
-    const tree1Child1: TreeData = new TreeData("10", "child1", "2");
-    const tree1Child2: TreeData = new TreeData("11", "child2", "2");
-    const tree1Child3: TreeData = new TreeData("12", "child3", "2");
-
-    const tree2Child4: TreeData = new TreeData("13", "subChild", "10");
-
-    const tree2: TreeData = new TreeData("3", "tree22", "1");
-
-    const trees = [root, tree1, tree2, tree2Child4, tree1Child3, tree1Child1, tree1Child2 , root2, root3,root4]
-
-    const root11: TreeData = new TreeData("16759768090991", "root");
-    const root2222: TreeData = new TreeData("1675976814600", "root2", "16759768090991");
-
-    const tempTree = [root11, root2222]
-    // ====================================================================================================
-
     const [isAddboxShown, setAddbox] = useRecoilState(addBox);
 
-    // const [tree, setTree] = useRecoilState(treeData);
     const [tree, setTree] = useState<Array<TreeData>>([]);
     const [addText, setAddText] = useState<string>("");
     const [selectedNode, setSelectedNode] = useState("");
 
     const treeItems = getHierarchicalTree(tree);
-
 
     return (
         <Box>
@@ -183,14 +188,24 @@ export default (props: LeftMenuProps) => {
 
             {/* Add view */}
             <Box style={{display: isAddboxShown? "block" : "none", height: "100%"}}>
-                <TextField size={"small"} variant={"standard"} onChange={(e) => setAddText(e.target.value)} />
-                {addText}
 
-                <Button onClick={() => {
+                <TextSmall label="name"
+                           color={"secondary"}
+                           size={"small"}
+                           variant={"standard"}
+                           onChange={(e) => setAddText(e.target.value)} />
 
-                    setTree(old => getTreeData(old, addText, selectedNode));
-                    setAddbox(false);
-                }}> OK </Button>
+
+                <Box style={{display:"inline-block"}}>
+                    <Box>
+                        <ButtonBox>
+                            <FontAwesomeIcon icon={faCheck} size={"sm"} onClick={addNodeToTree}/>
+                        </ButtonBox>
+                        <ButtonBox>
+                            <FontAwesomeIcon icon={faXmark} size={"sm"} onClick={closeAdd}/>
+                        </ButtonBox>
+                    </Box>
+                </Box>
             </Box>
 
             {/* Tree view*/}
@@ -219,10 +234,33 @@ export default (props: LeftMenuProps) => {
                 <MenuItem onClick={() => {
                     setAddbox(true);
                     handleClose();
-                }}>Add</MenuItem>
+                }}>
+                    Add
+                </MenuItem>
 
+                <Divider/>
+
+                <MenuItem onClick={() => {
+                    removeNode();
+                    handleClose();
+                }}>
+                    Delete
+                </MenuItem>
             </Menu>
-
+            <Snackbar
+                open={toastOpen}
+                autoHideDuration={3000}
+                onClose={closeToast}
+                anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "right"
+                }}
+            >
+                <Alert severity={toastSevere}
+                       onClose={closeToast}>
+                    {toastMsg}
+                </Alert>
+            </Snackbar>
         </Box>
     )
 
