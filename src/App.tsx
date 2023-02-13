@@ -22,14 +22,14 @@ function App() {
           color: textColor,
           padding: "15px 10px 15px 10px"
       }}>
-          <RecoilRoot>
+
               <Box style={{float: "left", width: "200px"}}>
                   <LeftMenu></LeftMenu>
               </Box>
               <Box style={{float: "right"}}>
 
               </Box>
-          </RecoilRoot>
+
       </Box>
   )
 }
