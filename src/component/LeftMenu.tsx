@@ -14,7 +14,7 @@ import {useRecoilState} from "recoil";
 
 import {addBox, treeData} from "../state/menuState";
 
-import {toast, toastSeverity, toastMessage} from "../state/commonState";
+import {toast, toastSeverity, toastMessage, selectedNode as rSelectedNode} from "../state/commonState";
 
 interface LeftMenuProps {
 }
@@ -58,13 +58,17 @@ export default (props: LeftMenuProps) => {
 
                 if(d.childrenIds.length === 0) {
                     result.push(
-                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}>
+                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}
+                             onClick={(e) => clickNode(e, d.id)}
+                        >
                             <TreeItem nodeId={d.id} label={d.name}/>
                         </div>
                     );
                 } else {
                     result.push(
-                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}>
+                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}
+                             onClick={(e) => clickNode(e, d.id)}
+                        >
                             <TreeItem nodeId={d.id} label={d.name}>
                                 {addTreeNode(subDatas, id)}
                             </TreeItem>
@@ -76,14 +80,18 @@ export default (props: LeftMenuProps) => {
 
                 if(d.childrenIds.length === 0) {
                     result.push(
-                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}>
+                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}
+                             onClick={(e) => clickNode(e, d.id)}
+                        >
                             <TreeItem nodeId={d.id} label={d.name}/>
                         </div>
                     );
                 } else {
                     // if node has children, call recursively
                     result.push(
-                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}>
+                        <div key={d.id} id={d.id} onContextMenu={handleContextMenu}
+                             onClick={(e) => clickNode(e, d.id)}
+                        >
                             <TreeItem nodeId={d.id} label={d.name}>
                                 { addTreeNode(subDatas, id)}
                             </TreeItem>
@@ -152,14 +160,29 @@ export default (props: LeftMenuProps) => {
         showToast( "\"" + addText + "\" is added to tree", "success");
     }
 
+    // Remove node from tree
     const removeNode = () => {
 
+        handleClose();
+    }
+
+    // Add node to tree
+    const addNode = () => {
+        setAddbox(true);
+        handleClose();
     }
 
     const closeAdd = () => {
         setAddbox(false);
     }
 
+
+    // Event handler when a node is clicked
+    const [, setClickedNode] = useRecoilState(rSelectedNode);
+    const clickNode = (event: React.MouseEvent, id: string) => {
+        event.stopPropagation();
+        setClickedNode(id);
+    }
 
 
     const handleClose = () => {
@@ -171,6 +194,9 @@ export default (props: LeftMenuProps) => {
     const [tree, setTree] = useState<Array<TreeData>>([]);
     const [addText, setAddText] = useState<string>("");
     const [selectedNode, setSelectedNode] = useState("");
+
+    // const [treeItems, setTreeItems] = useState<Array<JSX.Element>>(getHierarchicalTree(tree))
+    // setTreeItems(getHierarchicalTree(tree))
 
     const treeItems = getHierarchicalTree(tree);
 
@@ -231,19 +257,13 @@ export default (props: LeftMenuProps) => {
                         : undefined
                 }
             >
-                <MenuItem onClick={() => {
-                    setAddbox(true);
-                    handleClose();
-                }}>
+                <MenuItem onClick={() => addNode()}>
                     Add
                 </MenuItem>
 
                 <Divider/>
 
-                <MenuItem onClick={() => {
-                    removeNode();
-                    handleClose();
-                }}>
+                <MenuItem onClick={() => removeNode()}>
                     Delete
                 </MenuItem>
             </Menu>

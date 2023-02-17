@@ -1,6 +1,14 @@
 import {atom} from "recoil";
 import {AlertColor} from "@mui/material";
 
+
+// ================ selected tab =================
+const selectedNode = atom<string>({
+    key: "selectedNode",
+    default: ""
+})
+// ===============================================
+
 // ================= toast message ===============
 const toast = atom<boolean>({
     key: "toastOpen",
@@ -17,4 +25,4 @@ const toastSeverity = atom<AlertColor>({
     default: "success"
 })
 
-export {toast, toastMessage, toastSeverity}
+export {toast, toastMessage, toastSeverity, selectedNode}
